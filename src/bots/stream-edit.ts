@@ -1,0 +1,73 @@
+export interface StreamEditController {
+  queue: (text: string) => void;
+  flush: (text: string) => Promise<void>;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export function createStreamEditController(
+  edit: (text: string) => Promise<void>,
+  intervalMs: number,
+): StreamEditController {
+  let pending: string | null = null;
+  let lastApplied = "";
+  let lastEditAt = 0;
+  let processing = false;
+
+  async function run(): Promise<void> {
+    if (processing) {
+      return;
+    }
+
+    processing = true;
+    try {
+      while (pending !== null) {
+        const text = pending;
+        pending = null;
+
+        if (!text || text === lastApplied) {
+          continue;
+        }
+
+        const wait = intervalMs - (Date.now() - lastEditAt);
+        if (wait > 0) {
+          await sleep(wait);
+        }
+
+        await edit(text);
+        lastApplied = text;
+        lastEditAt = Date.now();
+      }
+    } finally {
+      processing = false;
+    }
+  }
+
+  return {
+    queue(text: string): void {
+      pending = text;
+      void run();
+    },
+    async flush(text: string): Promise<void> {
+      pending = text;
+      await run();
+    },
+  };
+}
+
+export function truncateForPlatform(
+  text: string,
+  limit: number,
+  suffix = "\n\n...[truncated]",
+): string {
+  if (text.length <= limit) {
+    return text;
+  }
+  const head = Math.max(0, limit - suffix.length);
+  return `${text.slice(0, head)}${suffix}`;
+}
+

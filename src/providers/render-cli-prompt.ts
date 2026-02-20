@@ -1,0 +1,20 @@
+import type { ConversationMessage } from "../types.js";
+
+function roleLabel(role: ConversationMessage["role"]): string {
+  if (role === "system") {
+    return "SYSTEM";
+  }
+  if (role === "assistant") {
+    return "ASSISTANT";
+  }
+  return "USER";
+}
+
+export function renderCliPrompt(messages: ConversationMessage[]): string {
+  const body = messages
+    .map((message) => `${roleLabel(message.role)}:\n${message.content.trim()}`)
+    .join("\n\n");
+
+  return `${body}\n\nASSISTANT:\n`;
+}
+
