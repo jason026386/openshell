@@ -7,47 +7,34 @@ OpenShell은 Telegram 메시지를 로컬 CLI(`codex`, `claude`)에 연결하는
 
 CLI 스트림 이벤트를 받아 같은 메시지를 계속 `edit`하므로 답변이 실시간으로 갱신됩니다.
 
-## 1. 설치
-
-```bash
-npm install
-```
-
-## 2. 최소 설정
-
-`.env.example`를 복사해 `.env`를 만들고, 아래 1개만 채우면 실행됩니다.
-
-```bash
-cp .env.example .env
-```
-
-```dotenv
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-```
-
-처음 실행 후 Telegram에서 봇과 대화를 열고 `/init`을 1번 실행해 소유자(1인)를 등록해야 합니다.
-
 필수 조건:
 
 - 로컬 CLI 최소 1개 설치: `codex` 또는 `claude`
 - 해당 CLI 로그인 완료 (`codex login`, `claude setup-token` 등)
 
-## 3. 실행
-
-개발 모드:
+## 설치
 
 ```bash
-npm run dev
+npm install -g openshell
 ```
 
-빌드 후 실행:
+## 설정
+
+`openshell`을 실행할 폴더에 `.env`를 만들고, 아래 1개만 채우면 실행됩니다.
+
+```dotenv
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+```
+
+## 실행
 
 ```bash
-npm run build
-npm run start
+openshell
 ```
 
-## 4. Telegram 사용법
+처음 실행 후 Telegram에서 봇과 대화를 열고 `/init`을 1번 실행해 소유자(1인)를 등록해야 합니다.
+
+## Telegram 사용법
 
 - 일반 메시지: 그대로 질문
 - `/init` (최초 1회, 소유자 등록)
@@ -81,6 +68,7 @@ Codex effort 지원값:
 ## 참고
 
 - `/init`은 현재 사용자를 소유자(1인)로 등록하고 `.openshell/owner.json`에 저장합니다. (`SESSION_STORE_PATH`와 같은 폴더)
+- 상태(세션/대화 기록)는 기본적으로 현재 폴더의 `.openshell/`에 저장됩니다. 전용 폴더에서 실행하는 것을 권장합니다.
 - OpenShell은 Codex/Claude CLI를 권한 확인 없이 실행하도록 구성되어 있어 위험합니다. 신뢰 가능한 환경에서만 사용하세요.
 - `codex`는 `~/.codex/models_cache.json`에서 모델 목록을 읽습니다.
 - `claude`는 로컬 CLI 바이너리에서 모델 식별자를 추출해 목록을 만듭니다.
