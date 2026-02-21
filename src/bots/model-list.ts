@@ -1,8 +1,10 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
+import { homedir } from "node:os";
 import { spawnSync } from "node:child_process";
 
 import type { ProviderName } from "../types.js";
+import { resolveCommand } from "../providers/command-utils.js";
 
 export interface ProviderRuntimeInfo {
   command: string;
@@ -34,7 +36,7 @@ function providerLabel(provider: ProviderName): string {
 }
 
 function parseCodexModelCache(): ProviderModelCatalog {
-  const home = process.env.HOME ?? "";
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? homedir();
   const cachePath = join(home, ".codex", "models_cache.json");
   if (!existsSync(cachePath)) {
     return {
@@ -105,11 +107,7 @@ function parseCodexModelCache(): ProviderModelCatalog {
 }
 
 function resolveCommandPath(command: string): string | null {
-  const which = spawnSync("which", [command], { encoding: "utf8" });
-  if (which.status !== 0) {
-    return null;
-  }
-  const path = which.stdout.trim();
+  const path = resolveCommand(command);
   if (!path) {
     return null;
   }
@@ -121,6 +119,14 @@ function resolveCommandPath(command: string): string | null {
 }
 
 function parseClaudeModelsFromBinary(command: string): ProviderModelCatalog {
+  if (process.platform === "win32") {
+    return {
+      provider: "claude",
+      source: "claude_binary_scan_unsupported_on_windows",
+      models: [],
+    };
+  }
+
   const commandPath = resolveCommandPath(command);
   if (!commandPath) {
     return {

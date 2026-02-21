@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { shouldUseShellForCommand } from "./command-utils.js";
 
 export interface JsonlCallbacks {
   onLine: (line: string) => Promise<void> | void;
@@ -23,9 +24,12 @@ export async function runJsonlCli(
   callbacks: JsonlCallbacks,
 ): Promise<JsonlResult> {
   return new Promise<JsonlResult>((resolve, reject) => {
+    const useShell = shouldUseShellForCommand(command);
     const child = spawn(command, args, {
       cwd,
       stdio: ["pipe", "pipe", "pipe"],
+      shell: useShell,
+      windowsHide: true,
     });
 
     let stderr = "";
@@ -99,4 +103,3 @@ export async function runJsonlCli(
     child.stdin.end();
   });
 }
-

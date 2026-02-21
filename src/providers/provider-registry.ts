@@ -2,7 +2,7 @@ import type { AppConfig } from "../config.js";
 import type { ConversationMessage, ProviderName } from "../types.js";
 import { ClaudeCliProvider } from "./claude-cli-provider.js";
 import { CodexCliProvider } from "./codex-cli-provider.js";
-import { commandExists } from "./command-utils.js";
+import { resolveCommand } from "./command-utils.js";
 
 export interface ProviderStreamOptions {
   model?: string;
@@ -27,12 +27,13 @@ export function createProviderRegistry(
 ): Map<ProviderName, LlmProvider> {
   const providers = new Map<ProviderName, LlmProvider>();
 
-  if (commandExists(config.codex.command)) {
+  const codexCommand = resolveCommand(config.codex.command);
+  if (codexCommand) {
     const bypass = true;
     providers.set(
       "codex",
       new CodexCliProvider(
-        config.codex.command,
+        codexCommand,
         config.cliWorkdir,
         config.codex.model,
         bypass,
@@ -47,12 +48,13 @@ export function createProviderRegistry(
     );
   }
 
-  if (commandExists(config.claude.command)) {
+  const claudeCommand = resolveCommand(config.claude.command);
+  if (claudeCommand) {
     const bypass = true;
     providers.set(
       "claude",
       new ClaudeCliProvider(
-        config.claude.command,
+        claudeCommand,
         config.cliWorkdir,
         config.claude.model,
         bypass,
