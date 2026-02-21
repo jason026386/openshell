@@ -21,6 +21,21 @@ function hasWindowsSuffix(command: string): boolean {
   return WINDOWS_EXECUTABLE_SUFFIXES.some((suffix) => lower.endsWith(suffix));
 }
 
+function preferWindowsExecutablePath(path: string): string {
+  if (!isWindows() || hasWindowsSuffix(path)) {
+    return path;
+  }
+
+  for (const suffix of WINDOWS_EXECUTABLE_SUFFIXES) {
+    const candidate = `${path}${suffix}`;
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return path;
+}
+
 function locateWithSystem(command: string): string | null {
   const locator = isWindows() ? "where.exe" : "which";
   const result = spawnSync(locator, [command], {
@@ -66,7 +81,7 @@ export function resolveCommand(command: string): string | null {
   for (const candidate of lookupCandidates) {
     const located = locateWithSystem(candidate);
     if (located) {
-      return located;
+      return preferWindowsExecutablePath(located);
     }
   }
   return null;
@@ -83,6 +98,10 @@ export function shouldUseShellForCommand(command: string): boolean {
 
   const lower = command.toLowerCase();
   if (lower.endsWith(".cmd") || lower.endsWith(".bat")) {
+    return true;
+  }
+
+  if (looksLikePath(command) && !hasWindowsSuffix(command)) {
     return true;
   }
 
